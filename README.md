@@ -1,4 +1,4 @@
-# ☀️ SolarSense PH
+# ☀️ SinagCalc PH
 
 Residential rooftop solar calculator for Filipino homeowners.
 Enter your location, roof size, electricity bill, and system preference —
@@ -20,7 +20,7 @@ get a personalised estimate for system size, cost, ROI, and environmental impact
 ## Project Structure
 
 ```
-solarsense-ph/
+sinagcalc-ph/
 ├── docker-compose.yml      ← full stack local dev
 ├── .env.example            ← copy to .env and fill in
 │
