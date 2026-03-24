@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - ALLOWED_ORIGINS=http://localhost:3000
+    volumes:
+      - ./backend:/app        # hot-reload in dev
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev             # use the dev stage for local, prod for production
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app       # hot-reload in dev
+      - /app/node_modules     # keep container node_modules isolated
+      - /app/.next
+    depends_on:
+      - backend
+    restart: unless-stopped
