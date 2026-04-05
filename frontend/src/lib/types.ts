@@ -37,6 +37,10 @@ export interface Options {
   rate_config:     RateConfig;
 }
 
+// ── System type ───────────────────────────────────────────────────────────────
+
+export type SystemType = "grid_tied" | "hybrid";
+
 // ── Calculation request ───────────────────────────────────────────────────────
 
 export interface CalculationRequest {
@@ -45,6 +49,7 @@ export interface CalculationRequest {
   monthly_bill:         string;
   quality_tier:         string;
   electricity_rate_php: number;
+  system_type:          SystemType;
 }
 
 // ── Calculation response ──────────────────────────────────────────────────────
@@ -66,21 +71,33 @@ export interface SystemResult {
 }
 
 export interface FinancialsResult {
-  total_php:            number;
-  cost_per_wp:          number;
-  panels_php:           number;
-  inverter_php:         number;
-  mounting_php:         number;
-  wiring_php:           number;
-  labor_php:            number;
-  annual_gen_kwh:       number;
+  // Cost breakdown
+  total_php:     number;
+  cost_per_wp:   number;
+  panels_php:    number;
+  inverter_php:  number;
+  mounting_php:  number;
+  wiring_php:    number;
+  labor_php:     number;
+  battery_php:   number;   // 0 for grid-tied
+  permitting_php: number;
+  // System type context
+  system_type:      string;
+  battery_kwh:      number; // 0.0 for grid-tied
+  self_consume_pct: number;
+  // Generation
+  annual_gen_kwh: number;
+  // Savings & returns
   payback_years:        number;
   lifetime_savings_php: number;
   net_profit_php:       number;
   roi_pct:              number;
   monthly_savings_y1:   number;
-  self_consume_pct:     number;
-  new_monthly_bill_est: number;
+  annual_savings_y1:    number;
+  // Bill impact
+  original_monthly_bill: number;
+  new_monthly_bill_est:  number;
+  bill_reduction_pct:    number;
 }
 
 export interface EnvironmentResult {
@@ -108,6 +125,7 @@ export interface FormState {
   roof_area:    string | null;
   monthly_bill: string | null;
   quality_tier: string | null;
+  system_type:  SystemType;
 }
 
 // ── Explainer ─────────────────────────────────────────────────────────────────

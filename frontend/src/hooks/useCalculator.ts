@@ -1,33 +1,34 @@
 "use client";
 // hooks/useCalculator.ts
 // Manages the full calculator lifecycle: options loading, form state,
-// rate editing, submission, and results. Components stay presentational.
+// rate editing, system type selection, submission, and results.
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import type {
-  Options, FormState, CalculationResponse,
+  Options, FormState, CalculationResponse, SystemType,
 } from "@/lib/types";
 
 interface UseCalculatorReturn {
   // Data
-  options:       Options | null;
-  result:        CalculationResponse | null;
+  options:        Options | null;
+  result:         CalculationResponse | null;
   // Form state
-  form:          FormState;
-  rate:          number;
+  form:           FormState;
+  rate:           number;
   // Status
   loadingOptions: boolean;
-  calculating:   boolean;
-  error:         string | null;
+  calculating:    boolean;
+  error:          string | null;
   // Actions
-  setIsland:     (island: string) => void;
-  setZone:       (zone: string) => void;
-  setField:      (field: keyof Omit<FormState, "island" | "zone">, value: string) => void;
-  setRate:       (rate: number) => void;
+  setIsland:           (island: string) => void;
+  setZone:             (zone: string) => void;
+  setField:            (field: keyof Omit<FormState, "island" | "zone" | "system_type">, value: string) => void;
+  setSystemType:       (type: SystemType) => void;
+  setRate:             (rate: number) => void;
   onDistributorChange: (distributorKey: string) => void;
-  calculate:     () => Promise<void>;
-  reset:         () => void;
+  calculate:           () => Promise<void>;
+  reset:               () => void;
 }
 
 const EMPTY_FORM: FormState = {
@@ -36,18 +37,19 @@ const EMPTY_FORM: FormState = {
   roof_area:    null,
   monthly_bill: null,
   quality_tier: null,
+  system_type:  "grid_tied",   // default — backend also defaults to this
 };
 
 export function useCalculator(): UseCalculatorReturn {
   const [options,        setOptions]        = useState<Options | null>(null);
   const [result,         setResult]         = useState<CalculationResponse | null>(null);
   const [form,           setForm]           = useState<FormState>(EMPTY_FORM);
-  const [rate,           setRate]           = useState<number>(11.5);
+  const [rate,           setRate]           = useState<number>(13.23);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [calculating,    setCalculating]    = useState(false);
   const [error,          setError]          = useState<string | null>(null);
 
-  // Load options once on mount
+  // Load options once on mount; initialise rate from backend default
   useEffect(() => {
     api.getOptions()
       .then((data) => {
@@ -67,11 +69,15 @@ export function useCalculator(): UseCalculatorReturn {
   }, []);
 
   const setField = useCallback(
-    (field: keyof Omit<FormState, "island" | "zone">, value: string) => {
+    (field: keyof Omit<FormState, "island" | "zone" | "system_type">, value: string) => {
       setForm((f) => ({ ...f, [field]: value }));
     },
     []
   );
+
+  const setSystemType = useCallback((type: SystemType) => {
+    setForm((f) => ({ ...f, system_type: type }));
+  }, []);
 
   // When the user picks a distributor, pre-fill the rate from that distributor's default
   const onDistributorChange = useCallback(
@@ -85,7 +91,7 @@ export function useCalculator(): UseCalculatorReturn {
 
   const calculate = useCallback(async () => {
     if (!form.zone || !form.roof_area || !form.monthly_bill || !form.quality_tier) {
-      setError("Please complete all four steps before calculating.");
+      setError("Please complete all steps before calculating.");
       return;
     }
     setError(null);
@@ -97,6 +103,7 @@ export function useCalculator(): UseCalculatorReturn {
         monthly_bill:         form.monthly_bill,
         quality_tier:         form.quality_tier,
         electricity_rate_php: rate,
+        system_type:          form.system_type,
       });
       setResult(res);
     } catch (e: unknown) {
@@ -123,6 +130,7 @@ export function useCalculator(): UseCalculatorReturn {
     setIsland,
     setZone,
     setField,
+    setSystemType,
     setRate,
     onDistributorChange,
     calculate,

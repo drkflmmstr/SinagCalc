@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { useCalculator } from "@/hooks/useCalculator";
-import LocationStep      from "@/components/steps/LocationStep";
-import RoofStep          from "@/components/steps/RoofStep";
-import BillStep          from "@/components/steps/BillStep";
-import QualityStep       from "@/components/steps/QualityStep";
-import RateEditor        from "@/components/RateEditor";
-import ResultsDashboard  from "@/components/results/ResultsDashboard";
+import { useCalculator }  from "@/hooks/useCalculator";
+import LocationStep       from "@/components/steps/LocationStep";
+import RoofStep           from "@/components/steps/RoofStep";
+import BillStep           from "@/components/steps/BillStep";
+import QualityStep        from "@/components/steps/QualityStep";
+import SystemTypeStep     from "@/components/steps/SystemTypeStep";
+import RateEditor         from "@/components/RateEditor";
+import ResultsDashboard   from "@/components/results/ResultsDashboard";
 
 export default function Home() {
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -15,7 +16,7 @@ export default function Home() {
   const {
     options, result, form, rate,
     loadingOptions, calculating, error,
-    setIsland, setZone, setField,
+    setIsland, setZone, setField, setSystemType,
     setRate, onDistributorChange,
     calculate, reset,
   } = useCalculator();
@@ -32,7 +33,6 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <header className="relative overflow-hidden bg-gradient-to-br from-[#0a3560] via-[#1E6B45] to-[#2D8B5A] px-6 py-16 text-center">
-        {/* Sun glow */}
         <div className="pointer-events-none absolute -top-48 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full
                         bg-[radial-gradient(circle,rgba(255,204,92,0.22)_0%,transparent_65%)]" />
         <div className="relative z-10 mx-auto max-w-xl">
@@ -49,8 +49,8 @@ export default function Home() {
             Is Solar Worth It<br />for <em className="italic text-sun-glow">Your</em> Home?
           </h1>
           <p className="mt-4 text-base leading-relaxed text-white/75">
-            Answer 4 simple questions, set your electricity rate,
-            and get a personalised solar estimate in seconds.
+            Grid-tied or hybrid with battery — answer 6 simple questions
+            and get a personalised 2026 solar estimate in seconds.
           </p>
         </div>
       </header>
@@ -66,7 +66,8 @@ export default function Home() {
         ) : !options ? (
           <div className="rounded-2xl bg-white shadow-xl border border-red-100 p-8 text-center">
             <p className="text-sm text-red-500 mb-3">⚠️ Could not connect to the backend.</p>
-            <p className="text-xs text-gray-400">Make sure the FastAPI server is running at{" "}
+            <p className="text-xs text-gray-400">
+              Make sure the FastAPI server is running at{" "}
               <code className="bg-gray-100 px-1.5 py-0.5 rounded">
                 {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}
               </code>
@@ -81,18 +82,22 @@ export default function Home() {
                 {/* Card header */}
                 <div className="flex items-center gap-3 border-b border-gray-100 bg-gradient-to-r
                                 from-grove-light to-sun-light px-6 py-5">
-                  <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-grove text-xl">📋</div>
+                  <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-grove text-xl">
+                    📋
+                  </div>
                   <div>
                     <h2 className="font-serif text-lg text-soil">Tell Us About Your Home</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">No exact measurements needed — just pick the closest range</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      2026 rates · Grid-tied &amp; hybrid options · No exact measurements needed
+                    </p>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-8">
 
-                  {/* Step 1 */}
+                  {/* Step 1 — Location */}
                   <Section step={1} title="Your Location"
-                    hint="First pick your island group, then select the climate zone. Sun hours vary significantly within islands.">
+                    hint="Pick your island group, then select your climate zone. Peak sun hours vary significantly — this directly affects your system size and savings.">
                     <LocationStep
                       options={options}
                       island={form.island}
@@ -102,9 +107,9 @@ export default function Home() {
                     />
                   </Section>
 
-                  {/* Step 2 */}
+                  {/* Step 2 — Roof */}
                   <Section step={2} title="Usable Roof Area"
-                    hint="Estimate the flat or slightly-tilted portion of your roof that gets direct sun.">
+                    hint="Estimate the flat or slightly-tilted portion of your roof that gets unobstructed direct sun.">
                     <RoofStep
                       options={options.roof_areas}
                       value={form.roof_area}
@@ -112,9 +117,9 @@ export default function Home() {
                     />
                   </Section>
 
-                  {/* Step 3 */}
-                  <Section step={3} title="Average Monthly Bill"
-                    hint="Check your last 3 Meralco / Discom bills and use the average.">
+                  {/* Step 3 — Bill */}
+                  <Section step={3} title="Average Monthly Electricity Bill"
+                    hint="Check your last 3 Meralco / Discom bills and use the average. This estimates your monthly kWh consumption.">
                     <BillStep
                       options={options.monthly_bills}
                       value={form.monthly_bill}
@@ -122,9 +127,9 @@ export default function Home() {
                     />
                   </Section>
 
-                  {/* Step 4 */}
+                  {/* Step 4 — Quality */}
                   <Section step={4} title="System Quality"
-                    hint="Higher tiers use better panels and inverters. Standard is the most popular in PH.">
+                    hint="Higher tiers use better panels and inverters with longer warranties. Standard is the most popular choice in the Philippines.">
                     <QualityStep
                       options={options.quality_tiers}
                       value={form.quality_tier}
@@ -132,9 +137,18 @@ export default function Home() {
                     />
                   </Section>
 
-                  {/* Rate editor */}
-                  <Section step={5} title="Your Electricity Rate"
-                    hint="Select your distributor for a pre-filled rate, or type your exact rate from your bill.">
+                  {/* Step 5 — System type */}
+                  <Section step={5} title="System Type"
+                    hint="Grid-tied is simpler and cheaper. Hybrid adds a battery for near energy independence — especially useful during brownouts.">
+                    <SystemTypeStep
+                      value={form.system_type}
+                      onChange={setSystemType}
+                    />
+                  </Section>
+
+                  {/* Step 6 — Rate */}
+                  <Section step={6} title="Your Electricity Rate"
+                    hint="Select your distributor for a pre-filled 2026 rate, or type the exact rate from your latest bill.">
                     <RateEditor
                       options={options}
                       rate={rate}
@@ -169,11 +183,16 @@ export default function Home() {
                         Calculating…
                       </>
                     ) : (
-                      <>☀️ Calculate My Solar Potential</>
+                      <>
+                        {form.system_type === "hybrid" ? "🔋" : "☀️"}
+                        &nbsp;Calculate My Solar Potential
+                      </>
                     )}
                   </button>
                   {!allSelected && (
-                    <p className="mt-2 text-center text-xs text-gray-400">Complete all 4 steps above to continue</p>
+                    <p className="mt-2 text-center text-xs text-gray-400">
+                      Complete steps 1–4 above to continue
+                    </p>
                   )}
                 </div>
 
@@ -192,13 +211,13 @@ export default function Home() {
 
       <footer className="pb-10 text-center text-xs text-gray-400">
         Built with ☀️ for Filipino homeowners &nbsp;·&nbsp;
-        Backend: FastAPI &nbsp;·&nbsp; Data: DOE PH · NASA POWER · Meralco · ERC
+        Backend: FastAPI &nbsp;·&nbsp; Rates: 2026 · DOE PH · Meralco · ERC
       </footer>
     </div>
   );
 }
 
-// ── Shared section wrapper ─────────────────────────────────────────────────────
+// ── Shared section wrapper ────────────────────────────────────────────────────
 
 function Section({
   step, title, hint, children,
