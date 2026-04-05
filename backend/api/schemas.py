@@ -37,22 +37,22 @@ class CalculationRequest(BaseModel):
     zone: ZoneKey = Field(
         ...,
         description="Climate zone key — determines peak sun hours.",
-        example="ncr",
+        json_schema_extra={"example": "ncr"},
     )
     roof_area: RoofAreaKey = Field(
         ...,
         description="Usable roof area range — caps max installable kWp.",
-        example="medium",
+        json_schema_extra={"example": "medium"},
     )
     monthly_bill: MonthlyBillKey = Field(
         ...,
         description="Monthly electricity bill bracket — estimates kWh consumption.",
-        example="2000_to_3500",
+        json_schema_extra={"example": "2000_to_3500"},
     )
     quality_tier: QualityTierKey = Field(
         ...,
         description="System quality tier — determines installed cost per Wp.",
-        example="standard",
+        json_schema_extra={"example": "standard"},
     )
     electricity_rate_php: float = Field(
         default=DEFAULT_ELECTRICITY_RATE_PHP,
@@ -63,7 +63,7 @@ class CalculationRequest(BaseModel):
             f"Allowed range: {MIN_RATE_PHP}–{MAX_RATE_PHP}. "
             f"Default: {DEFAULT_ELECTRICITY_RATE_PHP} (national average)."
         ),
-        example=12.0,
+        json_schema_extra={"example": 12.0},
     )
 
     system_type: Literal["grid_tied", "hybrid"] = Field(
@@ -72,7 +72,7 @@ class CalculationRequest(BaseModel):
             "Grid-tied: exports surplus to the grid via net metering. "
             "Hybrid: adds a battery for night-time self-consumption."
         ),
-        example="grid_tied",
+        json_schema_extra={"example": "grid_tied"},
     )
 
     model_config = {
@@ -176,5 +176,5 @@ class ExplainRequest(BaseModel):
     language: Literal["english", "filipino"] = Field(
         default="english",
         description="Language for the AI explanation. 'filipino' uses Tagalog-based Filipino.",
-        example="english",
+        json_schema_extra={"example": "english"},
     )
