@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # Gemini API — get your key at https://aistudio.google.com
     # Leave as placeholder to disable the AI explainer gracefully.
     gemini_api_key: str = "YOUR_GEMINI_API_KEY_HERE"
+    gemini_model:   str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=ROOT_ENV_FILE,

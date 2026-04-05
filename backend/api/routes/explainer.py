@@ -11,6 +11,7 @@ graceful fallback message instead of an error.
 """
 
 import json
+import logging
 from typing import AsyncGenerator
 
 from fastapi import APIRouter
@@ -21,6 +22,7 @@ from calculator.explainer import build_prompt
 from config import settings
 
 router = APIRouter(tags=["Explainer"])
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -80,35 +82,65 @@ async def _gemini_stream(prompt: str) -> AsyncGenerator[str, None]:
     Falls back gracefully if the API call fails.
     """
     try:
-        import google.generativeai as genai
+        async for event in _stream_gemini_text(prompt):
+            yield event
 
-        genai.configure(api_key=settings.gemini_api_key)
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            generation_config={
-                "temperature":     0.7,   # Slightly creative but consistent
-                "max_output_tokens": 400,
-                "top_p":           0.9,
-            },
+    except Exception as e:
+        logger.exception("Gemini explainer failed: %s", e)
+        yield f"data: {json.dumps('Sorry, the AI explainer encountered an error. Your calculation results above are still accurate.')}\n\n"
+        yield "data: [DONE]\n\n"
+
+
+async def _stream_gemini_text(prompt: str) -> AsyncGenerator[str, None]:
+    """
+    Stream text from Gemini using the current SDK when available, with a
+    compatibility fallback for the older google-generativeai package.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=settings.gemini_api_key)
+        response = client.models.generate_content_stream(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                max_output_tokens=400,
+                top_p=0.9,
+            ),
         )
 
-        response = model.generate_content(prompt, stream=True)
-
         for chunk in response:
-            if chunk.text:
-                # SSE format: "data: <payload>\n\n"
+            if getattr(chunk, "text", None):
                 yield f"data: {json.dumps(chunk.text)}\n\n"
 
         yield "data: [DONE]\n\n"
+        return
 
-    except Exception as e:
-        error_msg = (
-            "Paumanhin, hindi makuha ang AI explanation ngayon."
-            if "sorry" not in str(e).lower()
-            else str(e)
-        )
-        yield f"data: {json.dumps('Sorry, the AI explainer encountered an error. Your calculation results above are still accurate.')}\n\n"
-        yield "data: [DONE]\n\n"
+    except ImportError:
+        # Older projects may still have google-generativeai installed.
+        pass
+
+    import google.generativeai as genai
+
+    genai.configure(api_key=settings.gemini_api_key)
+    model = genai.GenerativeModel(
+        model_name=settings.gemini_model,
+        generation_config={
+            "temperature": 0.7,
+            "max_output_tokens": 400,
+            "top_p": 0.9,
+        },
+    )
+
+    response = model.generate_content(prompt, stream=True)
+
+    for chunk in response:
+        if getattr(chunk, "text", None):
+            yield f"data: {json.dumps(chunk.text)}\n\n"
+
+    yield "data: [DONE]\n\n"
 
 
 async def _fallback_stream(language: str) -> AsyncGenerator[str, None]:
