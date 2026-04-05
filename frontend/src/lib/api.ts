@@ -65,8 +65,6 @@ export const api = {
         transform(chunk, controller) {
           const text = decoder.decode(chunk, { stream: true });
           // Each SSE line looks like: "data: <payload>
-
-"
           const lines = text.split("\n").filter((l) => l.startsWith("data: "));
           for (const line of lines) {
             controller.enqueue(line.slice(6)); // strip "data: " prefix
