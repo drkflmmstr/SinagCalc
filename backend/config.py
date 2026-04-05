@@ -9,7 +9,12 @@ pydantic-settings. All solar domain constants are plain module-level
 values — they change rarely and don't need to be env-configurable.
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+ROOT_ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 
 # ── App settings (from environment) ───────────────────────────────────────────
@@ -23,7 +28,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = "YOUR_GEMINI_API_KEY_HERE"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ROOT_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
