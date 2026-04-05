@@ -82,26 +82,37 @@ async def _gemini_stream(prompt: str) -> AsyncGenerator[str, None]:
     Falls back gracefully if the API call fails.
     """
     try:
-        async for event in _stream_gemini_text(prompt):
-            yield event
+        explanation = _generate_gemini_text(prompt)
+
+        if not explanation.strip():
+            raise ValueError("Gemini returned an empty explanation.")
+
+        for chunk in _chunk_text(explanation):
+            yield f"data: {json.dumps(chunk)}\n\n"
+
+        yield "data: [DONE]\n\n"
 
     except Exception as e:
         logger.exception("Gemini explainer failed: %s", e)
-        yield f"data: {json.dumps('Sorry, the AI explainer encountered an error. Your calculation results above are still accurate.')}\n\n"
+        if settings.app_env == "development":
+            debug_msg = f"Gemini error: {type(e).__name__}: {e}"
+            yield f"data: {json.dumps(debug_msg)}\n\n"
+        else:
+            yield f"data: {json.dumps('Sorry, the AI explainer encountered an error. Your calculation results above are still accurate.')}\n\n"
         yield "data: [DONE]\n\n"
 
 
-async def _stream_gemini_text(prompt: str) -> AsyncGenerator[str, None]:
+def _generate_gemini_text(prompt: str) -> str:
     """
-    Stream text from Gemini using the current SDK when available, with a
-    compatibility fallback for the older google-generativeai package.
+    Generate the full explanation first, then let our SSE layer chunk it.
+    This avoids truncation issues from the provider SDK streaming path.
     """
     try:
         from google import genai
         from google.genai import types
 
         client = genai.Client(api_key=settings.gemini_api_key)
-        response = client.models.generate_content_stream(
+        response = client.models.generate_content(
             model=settings.gemini_model,
             contents=prompt,
             config=types.GenerateContentConfig(
@@ -110,13 +121,7 @@ async def _stream_gemini_text(prompt: str) -> AsyncGenerator[str, None]:
                 top_p=0.9,
             ),
         )
-
-        for chunk in response:
-            if getattr(chunk, "text", None):
-                yield f"data: {json.dumps(chunk.text)}\n\n"
-
-        yield "data: [DONE]\n\n"
-        return
+        return _extract_response_text(response)
 
     except ImportError:
         # Older projects may still have google-generativeai installed.
@@ -134,13 +139,49 @@ async def _stream_gemini_text(prompt: str) -> AsyncGenerator[str, None]:
         },
     )
 
-    response = model.generate_content(prompt, stream=True)
+    response = model.generate_content(prompt)
+    return _extract_response_text(response)
 
-    for chunk in response:
-        if getattr(chunk, "text", None):
-            yield f"data: {json.dumps(chunk.text)}\n\n"
 
-    yield "data: [DONE]\n\n"
+def _chunk_text(text: str, words_per_chunk: int = 8) -> list[str]:
+    """Split the full explanation into small chunks for the UI typewriter effect."""
+    words = text.split()
+    if not words:
+        return []
+
+    chunks: list[str] = []
+    for i in range(0, len(words), words_per_chunk):
+        segment = " ".join(words[i:i + words_per_chunk])
+        if i + words_per_chunk < len(words):
+            segment += " "
+        chunks.append(segment)
+
+    return chunks
+
+
+def _extract_response_text(response: object) -> str:
+    """
+    Prefer explicit candidate/part extraction over a single `.text` accessor,
+    which can be incomplete depending on SDK/version combinations.
+    """
+    direct_text = (getattr(response, "text", None) or "").strip()
+
+    parts_text: list[str] = []
+    for candidate in getattr(response, "candidates", []) or []:
+        content = getattr(candidate, "content", None)
+        for part in getattr(content, "parts", []) or []:
+            text = getattr(part, "text", None)
+            if text:
+                parts_text.append(text)
+
+    combined_parts = "".join(parts_text).strip()
+
+    if combined_parts and len(combined_parts) >= len(direct_text):
+        return combined_parts
+
+    return direct_text
+
+
 
 
 async def _fallback_stream(language: str) -> AsyncGenerator[str, None]:
