@@ -30,7 +30,8 @@ def calculate(req: CalculationRequest) -> CalculationResponse:
     """
     system      = size_system(req.zone, req.roof_area, req.monthly_bill)
     financials  = calculate_financials(
-        system, req.monthly_bill, req.quality_tier, req.electricity_rate_php
+        system, req.monthly_bill, req.quality_tier,
+        req.electricity_rate_php, req.system_type
     )
     environment = calculate_environmental_impact(financials["annual_gen_kwh"])
 
@@ -43,27 +44,33 @@ def calculate(req: CalculationRequest) -> CalculationResponse:
             quality_tier=req.quality_tier,
             monthly_kwh=BILL_BRACKETS[req.monthly_bill]["monthly_kwh"],
             electricity_rate_php=req.electricity_rate_php,
+            system_type=req.system_type,
         ),
         system=system,
         financials=financials,
         environment=environment,
-        recommendation=_recommendation(system["coverage_pct"]),
+        recommendation=_recommendation(system["coverage_pct"], req.system_type),
     )
 
 
-def _recommendation(coverage_pct: int) -> str:
+def _recommendation(coverage_pct: int, system_type: str) -> str:
+    battery_note = (
+        " The battery storage will cover your night-time usage, "
+        "giving you near energy independence."
+        if system_type == "hybrid" else ""
+    )
     if coverage_pct >= 90:
         return (
             "Solar is an excellent fit for your home. Your roof can accommodate "
-            "a system that covers nearly all your electricity needs."
+            f"a system that covers nearly all your electricity needs.{battery_note}"
         )
     if coverage_pct >= 60:
         return (
             "Solar is a good fit. Your roof can support a system that "
-            "significantly reduces your electricity bill."
+            f"significantly reduces your electricity bill.{battery_note}"
         )
     return (
         "Solar can still help cut your bill, though your available roof space "
         "limits the system size. Even partial coverage delivers real savings "
-        "and a positive environmental impact."
+        f"and a positive environmental impact.{battery_note}"
     )

@@ -66,6 +66,15 @@ class CalculationRequest(BaseModel):
         example=12.0,
     )
 
+    system_type: Literal["grid_tied", "hybrid"] = Field(
+        default="grid_tied",
+        description=(
+            "Grid-tied: exports surplus to the grid via net metering. "
+            "Hybrid: adds a battery for night-time self-consumption."
+        ),
+        example="grid_tied",
+    )
+
     model_config = {
         "json_schema_extra": {
             "examples": [{
@@ -73,7 +82,8 @@ class CalculationRequest(BaseModel):
                 "roof_area":            "medium",
                 "monthly_bill":         "2000_to_3500",
                 "quality_tier":         "standard",
-                "electricity_rate_php": 12.0,
+                "electricity_rate_php": 13.82,
+                "system_type":          "grid_tied",
             }]
         }
     }
@@ -89,6 +99,7 @@ class InputEcho(BaseModel):
     quality_tier:         str
     monthly_kwh:          int
     electricity_rate_php: float
+    system_type:          str
 
 
 class SystemResult(BaseModel):
@@ -103,6 +114,7 @@ class SystemResult(BaseModel):
 
 
 class FinancialsResult(BaseModel):
+    # Cost breakdown
     total_php:            int
     cost_per_wp:          float
     panels_php:           int
@@ -110,14 +122,25 @@ class FinancialsResult(BaseModel):
     mounting_php:         int
     wiring_php:           int
     labor_php:            int
+    battery_php:          int       # 0 for grid-tied
+    permitting_php:       int
+    # System type context
+    system_type:          str
+    battery_kwh:          float     # 0.0 for grid-tied
+    self_consume_pct:     int
+    # Generation
     annual_gen_kwh:       int
+    # Savings & returns
     payback_years:        float
     lifetime_savings_php: int
     net_profit_php:       int
     roi_pct:              float
     monthly_savings_y1:   int
-    self_consume_pct:     int
-    new_monthly_bill_est: int
+    annual_savings_y1:    int
+    # Bill impact
+    original_monthly_bill: int
+    new_monthly_bill_est:  int
+    bill_reduction_pct:    int
 
 
 class EnvironmentResult(BaseModel):
@@ -135,3 +158,23 @@ class CalculationResponse(BaseModel):
     financials:     FinancialsResult
     environment:    EnvironmentResult
     recommendation: str
+
+
+# ── Explainer models ───────────────────────────────────────────────────────────
+
+class ExplainRequest(BaseModel):
+    """
+    Input for POST /explain.
+
+    Carries the full calculation result plus the user's language preference.
+    The backend uses this to build a context-rich prompt for Gemini.
+    """
+    result:   CalculationResponse = Field(
+        ...,
+        description="The full result from POST /calculate.",
+    )
+    language: Literal["english", "filipino"] = Field(
+        default="english",
+        description="Language for the AI explanation. 'filipino' uses Tagalog-based Filipino.",
+        example="english",
+    )

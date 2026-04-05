@@ -15,8 +15,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # ── App settings (from environment) ───────────────────────────────────────────
 
 class Settings(BaseSettings):
-    app_env:         str  = "development"
-    allowed_origins: str  = "http://localhost:3000"
+    app_env:         str = "development"
+    allowed_origins: str = "http://localhost:3000"
+
+    # Gemini API — get your key at https://aistudio.google.com
+    # Leave as placeholder to disable the AI explainer gracefully.
+    gemini_api_key: str = "YOUR_GEMINI_API_KEY_HERE"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -27,6 +31,10 @@ class Settings(BaseSettings):
     def origins_list(self) -> list[str]:
         """Parse comma-separated ALLOWED_ORIGINS into a list."""
         return [o.strip() for o in self.allowed_origins.split(",")]
+
+    def gemini_configured(self) -> bool:
+        """True only when a real key has been set (not the placeholder)."""
+        return bool(self.gemini_api_key) and self.gemini_api_key != "YOUR_GEMINI_API_KEY_HERE"
 
 
 settings = Settings()
@@ -114,71 +122,71 @@ DISTRIBUTORS: dict[str, dict] = {
     "meralco": {
         "name":             "Meralco",
         "regions":          ["ncr", "central_luzon"],
-        "default_rate_php": 12.0,
+        "default_rate_php": 13.82,
     },
     "veco": {
         "name":             "VECO (Visayan Electric)",
         "regions":          ["western_visayas"],
-        "default_rate_php": 11.8,
+        "default_rate_php": 13.57,
     },
     "cebeco": {
         "name":             "CEBECO",
         "regions":          ["western_visayas"],
-        "default_rate_php": 11.2,
+        "default_rate_php": 12.88,
     },
     "norsamelco": {
         "name":             "NORSAMELCO",
         "regions":          ["eastern_visayas"],
-        "default_rate_php": 10.9,
+        "default_rate_php": 12.54,
     },
     "ileco": {
         "name":             "ILECO (Iloilo)",
         "regions":          ["western_visayas"],
-        "default_rate_php": 11.5,
+        "default_rate_php": 13.23,
     },
     "davao_light": {
         "name":             "Davao Light & Power",
         "regions":          ["davao_soccsksargen"],
-        "default_rate_php": 11.3,
+        "default_rate_php": 13.00,
     },
     "cotabato_light": {
         "name":             "Cotabato Light",
         "regions":          ["davao_soccsksargen"],
-        "default_rate_php": 10.8,
+        "default_rate_php": 12.42,
     },
     "ceneco": {
         "name":             "CENECO (Negros Occidental)",
         "regions":          ["western_visayas"],
-        "default_rate_php": 11.0,
+        "default_rate_php": 12.65,
     },
     "beneco": {
         "name":             "BENECO (Baguio / Benguet)",
         "regions":          ["car"],
-        "default_rate_php": 12.5,
+        "default_rate_php": 14.38,
     },
     "pelco": {
         "name":             "PELCO (Pampanga)",
         "regions":          ["central_luzon"],
-        "default_rate_php": 11.6,
+        "default_rate_php": 13.34,
     },
     "inec": {
         "name":             "INEC (Ilocos Norte)",
         "regions":          ["ilocos"],
-        "default_rate_php": 10.5,
+        "default_rate_php": 12.08,
     },
     "other": {
         "name":             "Other / Unknown",
         "regions":          [],
-        "default_rate_php": 11.5,   # national average fallback
+        "default_rate_php": 13.23,  # national average fallback (2026)
     },
 }
 
 # Fallback rate used when distributor is unknown
-DEFAULT_ELECTRICITY_RATE_PHP = 11.5
+DEFAULT_ELECTRICITY_RATE_PHP = 13.23  # 2026 national average
 
 # Minimum and maximum rates the user is allowed to enter (validation bounds)
 MIN_RATE_PHP = 5.0
-MAX_RATE_PHP = 25.0
+MAX_RATE_PHP = 30.0
 
 
 # ── Bill brackets ──────────────────────────────────────────────────────────────
@@ -208,9 +216,9 @@ ROOF_AREA_BRACKETS: dict[str, dict] = {
 # ── System quality tiers ───────────────────────────────────────────────────────
 
 QUALITY_TIERS: dict[str, dict] = {
-    "basic":    {"label": "Basic",    "description": "Entry-level brands, string inverter, ~10-yr warranty",          "cost_per_wp": 40},
-    "standard": {"label": "Standard", "description": "Mid-range, most popular choice, ~15-yr warranty",               "cost_per_wp": 50},
-    "premium":  {"label": "Premium",  "description": "Top-tier brands, microinverter / battery-ready, ~25-yr warranty","cost_per_wp": 65},
+    "basic":    {"label": "Basic",    "description": "Entry-level brands, string inverter, ~10-yr warranty",          "cost_per_wp": 55},
+    "standard": {"label": "Standard", "description": "Mid-range, most popular choice, ~15-yr warranty",               "cost_per_wp": 65},
+    "premium":  {"label": "Premium",  "description": "Top-tier brands, microinverter / battery-ready, ~25-yr warranty","cost_per_wp": 85},
 }
 
 COST_ALLOCATION: dict[str, float] = {
@@ -227,13 +235,46 @@ COST_ALLOCATION: dict[str, float] = {
 SYSTEM_EFFICIENCY      = 0.80
 PANEL_DEGRADATION_RATE = 0.005
 SYSTEM_LIFETIME_YEARS  = 25
-PANEL_WATTAGE          = 415
+PANEL_WATTAGE          = 550
 
+
+# ── Battery & hybrid constants (2026) ─────────────────────────────────────────
+
+# LFP (Lithium Iron Phosphate) battery storage — installed cost per kWh
+BATTERY_COST_PER_KWH = 25_000          # PHP/kWh
+
+# Multiplier applied to base system cost for hybrid inverter premium
+HYBRID_MODIFIER      = 1.15            # +15% over grid-tied inverter cost
+
+# ── Soft costs ─────────────────────────────────────────────────────────────────
+
+# One-time permitting and net-metering application fees
+PERMITTING_FEES = 15_000               # PHP, flat fee per installation
+
+# ── Self-consumption ratios by system type ─────────────────────────────────────
+# Grid-tied: solar only covers daytime usage (~40% of daily consumption)
+# Hybrid:    battery stores surplus for night use (~90% covered)
+
+GRID_TIED_SELF_CONSUME_RATIO = 0.40
+HYBRID_SELF_CONSUME_RATIO    = 0.90
+
+# ── Bill floor constants ───────────────────────────────────────────────────────
+# Even with solar, utilities charge a minimum fixed fee.
+# Grid-tied bill cannot go below 30% of original OR this fixed floor.
+# Hybrid bill cannot go below this fixed floor.
+
+GRID_TIED_BILL_FLOOR_RATIO = 0.30      # 30% of original bill minimum
+GRID_TIED_FIXED_FLOOR_PHP  = 300       # PHP minimum (connection / metering fee)
+HYBRID_FIXED_FLOOR_PHP     = 200       # PHP minimum for hybrid (lower — near off-grid)
+
+# ── Maintenance ────────────────────────────────────────────────────────────────
+# Annual O&M cost used in payback calculation
+ANNUAL_MAINTENANCE_PHP = 3_000         # PHP/year (cleaning, inverter check)
 
 # ── Financial assumptions ──────────────────────────────────────────────────────
 
 ANNUAL_RATE_ESCALATION  = 0.04
-NET_METERING_CREDIT_PHP = 5.0
+NET_METERING_CREDIT_PHP = 7.86  # Current Generation Charge, ERC 2026
 
 
 # ── Environmental factors ──────────────────────────────────────────────────────

@@ -14,9 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from api.routes.options    import router as options_router
 from api.routes.calculator import router as calculator_router
+from api.routes.explainer  import router as explainer_router
 
 app = FastAPI(
-    title="SinagCalc",
+    title="SinagCalc PH",
     description=(
         "Rooftop solar calculator API for Filipino homeowners. "
         "Estimates system size, cost, ROI, payback, and environmental impact."
@@ -35,12 +36,13 @@ app.add_middleware(
 # ── Routers ────────────────────────────────────────────────────────────────────
 app.include_router(options_router)
 app.include_router(calculator_router)
+app.include_router(explainer_router)
 
 
 @app.get("/", tags=["Meta"], summary="Service info")
 def root():
     return {
-        "service": "SinagCalc API",
+        "service": "SinagCalc PH API",
         "version": "1.0.0",
         "docs":    "/docs",
     }
@@ -49,6 +51,6 @@ def root():
 # ── Dev runner ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    print("\n🌞  sinagCalc  —  http://localhost:8000")
+    print("\n🌞  SinagCalc PH  —  http://localhost:8000")
     print("📄  Swagger UI     —  http://localhost:8000/docs\n")
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
