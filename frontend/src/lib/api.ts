@@ -58,16 +58,42 @@ export const api = {
       throw new Error(body?.detail ?? `API error ${res.status}`);
     }
 
-    // Transform the raw byte stream into a stream of SSE data strings
+    // Transform the raw byte stream into a stream of SSE data strings.
+    // Network chunks do not necessarily align with SSE event boundaries,
+    // so we buffer until we see a full blank-line-delimited event.
     const decoder = new TextDecoder();
+    let buffer = "";
+
     return res.body.pipeThrough(
       new TransformStream<Uint8Array, string>({
         transform(chunk, controller) {
-          const text = decoder.decode(chunk, { stream: true });
-          // Each SSE line looks like: "data: <payload>
-          const lines = text.split("\n").filter((l) => l.startsWith("data: "));
-          for (const line of lines) {
-            controller.enqueue(line.slice(6)); // strip "data: " prefix
+          buffer += decoder.decode(chunk, { stream: true });
+
+          const events = buffer.split(/\r?\n\r?\n/);
+          buffer = events.pop() ?? "";
+
+          for (const event of events) {
+            const dataLines = event
+              .split(/\r?\n/)
+              .filter((line) => line.startsWith("data: "))
+              .map((line) => line.slice(6));
+
+            if (dataLines.length > 0) {
+              controller.enqueue(dataLines.join("\n"));
+            }
+          }
+        },
+        flush(controller) {
+          const event = buffer.trim();
+          if (!event) return;
+
+          const dataLines = event
+            .split(/\r?\n/)
+            .filter((line) => line.startsWith("data: "))
+            .map((line) => line.slice(6));
+
+          if (dataLines.length > 0) {
+            controller.enqueue(dataLines.join("\n"));
           }
         },
       })

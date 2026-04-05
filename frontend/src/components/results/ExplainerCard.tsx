@@ -30,6 +30,10 @@ export default function ExplainerCard({ result }: Props) {
 
   const idle       = !streaming && !done && !error && text === "";
   const hasContent = text.length > 0;
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
   return (
     <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-indigo-50 overflow-hidden shadow-sm">
@@ -94,13 +98,17 @@ export default function ExplainerCard({ result }: Props) {
         {/* Streaming / done state — show the text */}
         {hasContent && (
           <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-              {text}
+            <div className="space-y-3 text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+              {(paragraphs.length > 0 ? paragraphs : [text]).map((paragraph, index) => (
+                <p key={`${index}-${paragraph.slice(0, 24)}`}>
+                  {paragraph}
+                </p>
+              ))}
               {/* Blinking cursor while streaming */}
               {streaming && (
                 <span className="inline-block w-0.5 h-4 bg-violet-500 ml-0.5 animate-pulse align-middle" />
               )}
-            </p>
+            </div>
 
             {done && (
               <div className="flex items-center justify-between pt-2 border-t border-violet-100">

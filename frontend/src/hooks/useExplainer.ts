@@ -40,18 +40,28 @@ export function useExplainer(): UseExplainerReturn {
         const { value, done: streamDone } = await reader.read();
 
         if (streamDone) break;
+        if (!value) continue;
 
-        if (value === "[DONE]") {
-          setDone(true);
-          break;
-        }
+        const parts = value
+          .split("\n")
+          .map((part) => part.trim())
+          .filter(Boolean);
 
-        try {
-          // Each chunk is a JSON-encoded string
-          const chunk = JSON.parse(value) as string;
-          setText((prev) => prev + chunk);
-        } catch {
-          // Malformed chunk — skip silently
+        for (const part of parts) {
+          if (part === "[DONE]") {
+            setDone(true);
+            return;
+          }
+
+          try {
+            // Each payload is a JSON-encoded string.
+            const chunk = JSON.parse(part) as string;
+            setText((prev) => prev + chunk);
+          } catch {
+            // If a provider sends plain text instead of JSON, preserve it
+            // rather than dropping the rest of the explanation.
+            setText((prev) => prev + part);
+          }
         }
       }
     } catch (e: unknown) {

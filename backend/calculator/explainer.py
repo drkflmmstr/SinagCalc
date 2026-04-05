@@ -94,6 +94,7 @@ def build_prompt(result: dict, language: Literal["english", "filipino"]) -> str:
             "to an ordinary Filipino homeowner who is not technically sophisticated. "
             "Speak directly and warmly, as if you're sitting across from them. "
             "Use simple language. Avoid jargon. "
+            "Respond only in English. Do not use Filipino, Tagalog, or Taglish. "
             "Always refer to amounts in Philippine Peso (₱). "
             "Do not use bullet points. Write in three paragraphs."
         )
@@ -138,6 +139,9 @@ ENVIRONMENTAL IMPACT (over 25 years)
 - Could power {homes} Filipino homes for a year
 
 {structure}
+
+Language requirement: reply entirely in {"Filipino" if language == "filipino" else "English"}.
+{"Do not use English except for unavoidable technical terms." if language == "filipino" else "Do not use Filipino, Tagalog, or Taglish."}
 
 {word_limit}
 """
