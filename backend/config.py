@@ -22,6 +22,7 @@ ROOT_ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 class Settings(BaseSettings):
     app_env:         str = "development"
     allowed_origins: str = "http://localhost:3000"
+    allowed_origin_regex: str | None = None
 
     # Gemini API — get your key at https://aistudio.google.com
     # Leave as placeholder to disable the AI explainer gracefully.
@@ -36,7 +37,7 @@ class Settings(BaseSettings):
 
     def origins_list(self) -> list[str]:
         """Parse comma-separated ALLOWED_ORIGINS into a list."""
-        return [o.strip() for o in self.allowed_origins.split(",")]
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     def gemini_configured(self) -> bool:
         """True only when a real key has been set (not the placeholder)."""
