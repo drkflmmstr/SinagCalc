@@ -210,8 +210,23 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs text-gray-400">
-        Built with ☀️ for Filipino homeowners &nbsp;·&nbsp;
-        Backend: FastAPI &nbsp;·&nbsp; Rates: 2026 · DOE PH · Meralco · ERC
+        <div className="flex flex-col gap-2">
+          {/* Line 1: Purpose & Impact */}
+          <p>
+            Built with ☀️ for Filipino homeowners &nbsp;·&nbsp; 
+            <a href="https://github.com/drkflmmstr/SinagCalc" 
+              target="_blank" 
+              className="hover:text-gray-600 underline decoration-gray-300 underline-offset-2">
+              View Source
+            </a>
+          </p>
+
+          {/* Line 2: Authority & Data Context */}
+          <p className="opacity-80">
+            Data Basis: 2026 Residential Rates &nbsp;·&nbsp; 
+            Sources: DOE PH · Meralco · ERC
+          </p>
+        </div>
       </footer>
     </div>
   );
