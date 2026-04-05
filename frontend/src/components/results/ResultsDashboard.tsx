@@ -2,7 +2,8 @@
 import type { CalculationResponse } from "@/lib/types";
 import SystemCard      from "./SystemCard";
 import FinancialsCard  from "./FinancialsCard";
-import EnvironmentCard from "./EnvironmentCard";
+import EnvironmentCard  from "./EnvironmentCard";
+import ExplainerCard   from "./ExplainerCard";
 
 interface Props {
   result: CalculationResponse;
@@ -41,6 +42,9 @@ export default function ResultsDashboard({ result, onReset }: Props) {
       <SystemCard     system={system} financials={financials} />
       <FinancialsCard financials={financials} />
       <EnvironmentCard environment={environment} />
+
+      {/* AI Explainer */}
+      <ExplainerCard result={result} />
 
       {/* Disclaimer */}
       <div className="rounded-xl bg-sun-light border border-sun/20 p-4 text-xs text-gray-500 leading-relaxed">

@@ -109,3 +109,12 @@ export interface FormState {
   monthly_bill: string | null;
   quality_tier: string | null;
 }
+
+// ── Explainer ─────────────────────────────────────────────────────────────────
+
+export type ExplainLanguage = "english" | "filipino";
+
+export interface ExplainRequest {
+  result:   CalculationResponse;
+  language: ExplainLanguage;
+}
