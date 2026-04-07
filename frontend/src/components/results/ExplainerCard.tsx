@@ -36,7 +36,7 @@ export default function ExplainerCard({ result }: Props) {
     .filter(Boolean);
 
   return (
-    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-indigo-50 overflow-hidden shadow-sm">
+    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-indigo-50 shadow-sm">
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-violet-100 bg-white/60">
