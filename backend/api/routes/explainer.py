@@ -117,8 +117,9 @@ def _generate_gemini_text(prompt: str) -> str:
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.7,
-                max_output_tokens=400,
-                top_p=0.9,
+                max_output_tokens=1500,
+                top_p=0.95,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
         )
         return _extract_response_text(response)
@@ -134,8 +135,8 @@ def _generate_gemini_text(prompt: str) -> str:
         model_name=settings.gemini_model,
         generation_config={
             "temperature": 0.7,
-            "max_output_tokens": 400,
-            "top_p": 0.9,
+            "max_output_tokens": 1500,
+            "top_p": 0.95,
         },
     )
 
