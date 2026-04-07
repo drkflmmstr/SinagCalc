@@ -31,7 +31,7 @@ export default function ExplainerCard({ result }: Props) {
   const idle       = !streaming && !done && !error && text === "";
   const hasContent = text.length > 0;
   const paragraphs = text
-    .split(/\n\s*\n/)
+    .split(/\n+/)
     .map((part) => part.trim())
     .filter(Boolean);
 
@@ -98,7 +98,7 @@ export default function ExplainerCard({ result }: Props) {
         {/* Streaming / done state — show the text */}
         {hasContent && (
           <div className="space-y-4">
-            <div className="space-y-3 text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+            <div className="space-y-3 text-sm leading-relaxed text-gray-700">
               {(paragraphs.length > 0 ? paragraphs : [text]).map((paragraph, index) => (
                 <p key={`${index}-${paragraph.slice(0, 24)}`}>
                   {paragraph}
