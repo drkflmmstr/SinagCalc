@@ -59,6 +59,8 @@ SinagCalc/
     |-- tsconfig.json
     \-- src/
         |-- app/
+        |   |-- how-it-works/
+        |   |   |-- page.tsx 
         |   |-- globals.css
         |   |-- layout.tsx
         |   \-- page.tsx         # Main app page
