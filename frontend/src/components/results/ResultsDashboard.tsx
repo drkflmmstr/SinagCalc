@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import clsx from "clsx";
 import type { CalculationResponse } from "@/lib/types";
 import SystemCard      from "./SystemCard";
@@ -130,14 +131,20 @@ export default function ResultsDashboard({ result, onReset }: Props) {
       {/* ── AI Explainer ── */}
       <ExplainerCard result={result} />
 
-      {/* ── Disclaimer ── */}
+      {/* ── Disclaimer + methodology link ── */}
       <div className="rounded-xl bg-sun-light border border-sun/20 p-4 text-xs text-gray-500 leading-relaxed">
         <strong className="text-soil">Disclaimer:</strong> Estimates based on 2026 Philippine market
         conditions. Electricity rates: Meralco ₱13.82/kWh, others adjusted ~15% from 2024 values.
         Net-metering credit: ₱7.86/kWh (ERC generation charge). Installed costs: ₱55–₱85/Wp.
         Battery storage: ₱25,000/kWh (LFP). Annual rate escalation: 4%. Panel degradation: 0.5%/yr.
         Annual O&M: ₱3,000. CO₂ factor: 0.709 kg/kWh (DOE PH 2023).
-        Always get 2–3 quotes from accredited installers.
+        Always get 2–3 quotes from accredited installers.{" "}
+        <Link
+          href="/how-it-works"
+          className="font-semibold text-grove hover:underline underline-offset-2"
+        >
+          See full calculation methodology →
+        </Link>
       </div>
 
       {/* ── Reset ── */}

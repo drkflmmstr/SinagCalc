@@ -41,6 +41,17 @@ export default function Home() {
                           animate-pulse-glow">
             ☀️
           </div>
+
+          {/* ── App name / wordmark ── */}
+          <div className="mb-3 flex items-center justify-center gap-1.5">
+            <span className="font-serif text-3xl font-normal tracking-tight text-white">Sinag</span>
+            <span className="font-serif text-3xl font-normal tracking-tight text-sun-glow">Calc</span>
+            <span className="ml-1 rounded-md border border-white/25 bg-white/10 px-2 py-0.5
+                             text-xs font-bold uppercase tracking-widest text-white/80 backdrop-blur-sm">
+              PH
+            </span>
+          </div>
+
           <span className="mb-4 inline-block rounded-full border border-sun-glow/30 bg-sun-glow/15
                            px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-sun-glow">
             🇵🇭 For Filipino Homeowners
@@ -211,19 +222,32 @@ export default function Home() {
 
       <footer className="pb-10 text-center text-xs text-gray-400">
         <div className="flex flex-col gap-2">
-          {/* Line 1: Purpose & Impact */}
+          {/* Line 1: Branding */}
+          <p className="flex items-center justify-center gap-1.5 font-medium text-gray-500">
+            <span className="font-serif text-sm text-soil">Sinag</span>
+            <span className="font-serif text-sm text-grove">Calc</span>
+            <span className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] font-bold
+                             uppercase tracking-widest text-gray-400">PH</span>
+          </p>
+
+          {/* Line 2: Purpose & Links */}
           <p>
-            Built with ☀️ for Filipino homeowners &nbsp;·&nbsp; 
-            <a href="https://github.com/drkflmmstr/SinagCalc" 
-              target="_blank" 
+            Built with ☀️ for Filipino homeowners &nbsp;·&nbsp;
+            <a href="/how-it-works"
+              className="hover:text-gray-600 underline decoration-gray-300 underline-offset-2">
+              How It&apos;s Calculated
+            </a>
+            &nbsp;·&nbsp;
+            <a href="https://github.com/drkflmmstr/SinagCalc"
+              target="_blank"
               className="hover:text-gray-600 underline decoration-gray-300 underline-offset-2">
               View Source
             </a>
           </p>
 
-          {/* Line 2: Authority & Data Context */}
+          {/* Line 3: Authority & Data Context */}
           <p className="opacity-80">
-            Data Basis: 2026 Residential Rates &nbsp;·&nbsp; 
+            Data Basis: 2026 Residential Rates &nbsp;·&nbsp;
             Sources: DOE PH · Meralco · ERC
           </p>
         </div>
